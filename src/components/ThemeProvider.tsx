@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useSyncExternalStore } from 'react';
 
 type Theme = 'dark' | 'light';
 
@@ -18,30 +18,65 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark');
-  const [mounted, setMounted] = useState(false);
+// Theme store using useSyncExternalStore pattern (no setState in effects)
+let currentTheme: Theme = 'dark';
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      setTheme('light');
-    }
-  }, []);
+function notifyListeners() {
+  listeners.forEach((listener) => listener());
+}
+
+function subscribeTheme(callback: () => void) {
+  listeners.add(callback);
+  return () => {
+    listeners.delete(callback);
+  };
+}
+
+function getThemeSnapshot(): Theme {
+  return currentTheme;
+}
+
+function getThemeServerSnapshot(): Theme {
+  return 'dark';
+}
+
+function setThemeValue(theme: Theme) {
+  currentTheme = theme;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('theme', theme);
+  }
+  notifyListeners();
+}
+
+// Initialize theme from localStorage (runs once on module load in client)
+if (typeof window !== 'undefined') {
+  const saved = localStorage.getItem('theme') as Theme | null;
+  if (saved === 'dark' || saved === 'light') {
+    currentTheme = saved;
+  } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+    currentTheme = 'light';
+  }
+}
+
+// SSR-safe mounted check
+const subscribeMounted = () => () => {};
+const getMountedClient = () => true;
+const getMountedServer = () => false;
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const mounted = useSyncExternalStore(subscribeMounted, getMountedClient, getMountedServer);
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getThemeServerSnapshot);
 
   useEffect(() => {
     if (mounted) {
       document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
     }
   }, [theme, mounted]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  const toggleTheme = useCallback(() => {
+    setThemeValue(currentTheme === 'dark' ? 'light' : 'dark');
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
