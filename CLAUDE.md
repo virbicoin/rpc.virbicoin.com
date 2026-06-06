@@ -1,44 +1,56 @@
 # CLAUDE.md
 
-This file provides guidance for AI assistants working on this codebase.
+このファイルは、Claude Code (claude.ai/code) がこのリポジトリのコードを扱う際のガイドラインを提供します。
 
-## Project Overview
+## プロジェクト概要
 
-VirBiCoin RPC node status dashboard — a Next.js app that displays cryptocurrency node information and provides JSON-RPC proxy endpoints.
+VirBiCoin RPC ノードステータスダッシュボード — 暗号通貨ノードの稼働状況をリアルタイムで表示し、JSON-RPC プロキシエンドポイントを提供する Next.js アプリケーションです。
 
-## Tech Stack
+## 技術スタック
 
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript 6
-- **Styling**: Tailwind CSS 4
-- **Linting**: ESLint 10 (flat config)
-- **Runtime**: Node.js
+- **フレームワーク**: Next.js 16（App Router・Turbopack）
+- **言語**: TypeScript 6
+- **スタイリング**: Tailwind CSS 4
+- **Lint**: ESLint 10（`typescript-eslint` + `eslint-config-prettier`）
+- **フォーマッタ**: Prettier（`prettier-plugin-tailwindcss`）
+- **ランタイム**: Node.js 20+
 
-## Commands
+## よく使うコマンド
 
 ```bash
-npm run dev        # Development server (Turbopack, port 3000)
-npm run build      # Production build
-npm start          # Production server (port from $PORT or 3000)
-npm run lint       # ESLint check
-npm run lint:fix   # ESLint auto-fix
-npm run typecheck  # TypeScript type check
+# 開発
+npm run dev          # 開発サーバー起動（Turbopack, ポート3000）
+
+# 品質チェック
+npm run check        # 全チェック実行（lint + format + typecheck）
+npm run lint         # ESLint チェック
+npm run lint:fix     # ESLint の問題を自動修正
+npm run format       # Prettier で整形
+npm run format:check # Prettier のチェックのみ
+npm run typecheck    # TypeScript の型チェック
+
+# ビルド・デプロイ
+npm run build        # 本番ビルド
+npm start            # 本番サーバー起動（$PORT または 3000）
 ```
 
-## Project Structure
+## アーキテクチャ
 
 ```
-app/
-├── page.tsx              # Main dashboard page
-├── layout.tsx            # Root layout
-├── globals.css           # Global styles (Tailwind)
-├── api/
-│   └── nodes/            # Node status API endpoints
-│       ├── route.ts      # GET /api/nodes
-│       ├── data.ts       # Node configuration data
-│       └── [NODE_NAME]/
-│           └── route.ts  # GET /api/nodes/:name
-├── components/           # React components
+src/
+├── app/                  # App Router（ルート・レイアウト・ページ）
+│   ├── globals.css       # グローバルスタイル（Tailwind + CSS変数）
+│   ├── layout.tsx        # ルートレイアウト
+│   ├── page.tsx          # メインダッシュボードページ
+│   ├── api/
+│   │   └── nodes/        # ノードステータス API エンドポイント
+│   │       ├── route.ts  # GET /api/nodes
+│   │       ├── data.ts   # ノード設定データ
+│   │       └── [NODE_NAME]/
+│   │           └── route.ts  # GET /api/nodes/:name
+│   └── health/
+│       └── route.ts      # ヘルスチェックエンドポイント
+├── components/           # 再利用可能な React コンポーネント
 │   ├── Header.tsx
 │   ├── NodeStatus.tsx
 │   ├── ConnectionInfo.tsx
@@ -46,24 +58,44 @@ app/
 │   ├── UsageGuide.tsx
 │   ├── ThemeProvider.tsx
 │   └── ThemeToggle.tsx
-└── health/
-    └── route.ts          # Health check endpoint
 ```
 
-## Coding Conventions
+## コーディング規約
 
-- Use `type` imports: `import type { Foo } from "bar"`
-- Path alias: `@/*` maps to project root
-- Components are in `app/components/`
-- API routes use Next.js App Router conventions
+- `type` インポートを使用: `import type { Foo } from 'bar'`
+- パスエイリアス: `@/*` は `./src/*` にマップ
+- コンポーネントは `src/components/` に配置（named export）
+- API ルートは Next.js App Router の規約に従う
+- シングルクォート使用（Prettier設定）
+- コミット前に `npm run check` を実行
 
-## Deployment
+## デプロイ
 
-- Runs behind Nginx reverse proxy on port 4000 (configured via `PORT` env var)
-- POST requests are proxied to the VirBiCoin node RPC (port 8329)
-- GET requests are proxied to Next.js (port 4000)
-- Production: `npm run build && npm start`
+- Nginx リバースプロキシの背後でポート4000で稼働（`PORT` 環境変数で設定）
+- POST リクエストは VirBiCoin ノード RPC（ポート8329）にプロキシ
+- GET リクエストは Next.js（ポート4000）にプロキシ
+- 本番: `npm run build && npm start`
 
-## Environment Variables
+## 環境変数
 
-- `PORT` — Server port (default: 3000, production: 4000)
+- `PORT` — サーバーポート（デフォルト: 3000, 本番: 4000）
+- `NODES` — 監視対象ノード設定（JSON形式）。未設定時はノードなし
+  ```
+  NODES='{"Node 1":"http://host1:8329","Node 2":"http://host2:8329"}'
+  ```
+
+## VirBiCoin ネットワーク情報
+
+- **チェーンID**: 329
+- **シンボル**: VBC
+- **ブロックタイム**: 12〜14秒
+- **アルゴリズム**: Ethash（GPUマイニング可能）
+- **RPC**: https://rpc.virbicoin.com
+- **WebSocket**: wss://ws.virbicoin.com
+- **エクスプローラー**: https://explorer.virbicoin.com
+
+## 関連リポジトリ
+
+- **メインサイト**: `../virbicoin.com`（github.com/virbicoin/virbicoin.com）
+- **メインクライアント**: `../go-virbicoin`（github.com/virbicoin/go-virbicoin）
+  - VirBiCoin ノードの Go 実装（Gvbc）であり、ネットワークの公式メインクライアント

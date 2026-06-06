@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import ThemeToggle from "@/app/components/ThemeToggle";
+import Image from 'next/image';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
-export default function Header() {
+export function Header() {
   return (
     <header className="w-full py-8 header-border">
       <div className="max-w-screen-lg mx-auto px-4">
@@ -18,9 +18,7 @@ export default function Header() {
               className="drop-shadow-lg"
               priority
             />
-            <h1 className="text-3xl md:text-4xl font-bold gradient-text">
-              VirBiCoin Node
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold gradient-text">VirBiCoin Node</h1>
           </div>
           <div className="flex-1 flex justify-end">
             <ThemeToggle />

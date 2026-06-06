@@ -1,23 +1,25 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import ThemeProvider from "@/app/components/ThemeProvider";
-import Header from "@/app/components/Header";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { Header } from '@/components/Header';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "VirBiCoin Node Information",
-  description: "VirBiCoin VBC Cryptocurrency NFT",
+  title: 'VirBiCoin Node Information',
+  description: 'VirBiCoin VBC Cryptocurrency Node Status Dashboard',
 };
+
+const currentYear = new Date().getFullYear();
 
 export default function RootLayout({
   children,
@@ -26,9 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
           <div className="min-h-screen flex flex-col">
             <Header />
@@ -36,7 +36,7 @@ export default function RootLayout({
             <footer className="w-full footer-border mt-auto">
               <div className="max-w-screen-lg mx-auto px-4 text-center py-6">
                 <p className="footer-text text-sm">
-                  &copy; 2024-{new Date().getFullYear()} Digitalregion, Inc. All Rights Reserved.
+                  &copy; 2024-{currentYear} VirBiCoin Foundation. All Rights Reserved.
                 </p>
               </div>
             </footer>

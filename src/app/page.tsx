@@ -1,7 +1,7 @@
-import NodeStatus from "@/app/components/NodeStatus";
-import ConnectionInfo from "@/app/components/ConnectionInfo";
-import UsageGuide from "@/app/components/UsageGuide";
-import SecurityInfo from "@/app/components/SecurityInfo";
+import { NodeStatus } from '@/components/NodeStatus';
+import { ConnectionInfo } from '@/components/ConnectionInfo';
+import { UsageGuide } from '@/components/UsageGuide';
+import { SecurityInfo } from '@/components/SecurityInfo';
 
 export default function NodePage() {
   return (

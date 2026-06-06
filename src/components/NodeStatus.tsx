@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 interface Node {
   id: number;
@@ -15,24 +15,22 @@ interface NodeStatusData {
   clientVersion: string | null;
 }
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5分（ミリ秒）
+const CACHE_DURATION = 5 * 60 * 1000;
 
-export default function NodeStatus() {
+export function NodeStatus() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [statusData, setStatusData] = useState<Record<number, NodeStatusData>>({});
   const [loading, setLoading] = useState(true);
 
-  // ブラウザのロケールとタイムゾーンを取得
   const locale = typeof window !== 'undefined' ? navigator.language : 'en-US';
-  const timeZone = typeof window !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC';
+  const timeZone =
+    typeof window !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC';
 
-  // ノード一覧の取得
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        // キャッシュをチェック
-        const cachedNodes = localStorage.getItem("nodes");
-        const cachedNodesTimestamp = localStorage.getItem("nodesTimestamp");
+        const cachedNodes = localStorage.getItem('nodes');
+        const cachedNodesTimestamp = localStorage.getItem('nodesTimestamp');
 
         if (cachedNodes && cachedNodesTimestamp) {
           const timestamp = parseInt(cachedNodesTimestamp);
@@ -42,7 +40,7 @@ export default function NodeStatus() {
           }
         }
 
-        const res = await fetch("/api/nodes");
+        const res = await fetch('/api/nodes');
         if (!res.ok) throw new Error(`Failed to fetch nodes: ${res.status}`);
         const data = await res.json();
         const formattedNodes = Object.keys(data).map((name, index) => ({
@@ -50,28 +48,25 @@ export default function NodeStatus() {
           name,
         }));
 
-        // キャッシュに保存
-        localStorage.setItem("nodes", JSON.stringify(formattedNodes));
-        localStorage.setItem("nodesTimestamp", Date.now().toString());
+        localStorage.setItem('nodes', JSON.stringify(formattedNodes));
+        localStorage.setItem('nodesTimestamp', Date.now().toString());
 
         setNodes(formattedNodes);
       } catch (error) {
-        console.error("Error fetching nodes:", error);
+        console.error('Error fetching nodes:', error);
       }
     };
 
     fetchNodes();
   }, []);
 
-  // ノードステータスの取得
   useEffect(() => {
     const fetchAllNodes = async () => {
       if (nodes.length === 0) return;
       setLoading(true);
 
-      // キャッシュをチェック
-      const cachedStatus = localStorage.getItem("nodeStatus");
-      const cachedStatusTimestamp = localStorage.getItem("nodeStatusTimestamp");
+      const cachedStatus = localStorage.getItem('nodeStatus');
+      const cachedStatusTimestamp = localStorage.getItem('nodeStatusTimestamp');
 
       if (cachedStatus && cachedStatusTimestamp) {
         const timestamp = parseInt(cachedStatusTimestamp);
@@ -88,26 +83,24 @@ export default function NodeStatus() {
         try {
           const encodedNodeName = encodeURIComponent(node.name);
           const res = await fetch(`/api/nodes/${encodedNodeName}`);
-          
+
           if (!res.ok) {
-            // 502, 503は特別な処理
             if (res.status === 502 || res.status === 503) {
-              throw new Error(`Node ${node.name} is temporarily unavailable (${res.status})`);
+              throw new Error(
+                `Node ${node.name} is temporarily unavailable (${res.status})`
+              );
             }
-            throw new Error(
-              `Failed to fetch data for node ${node.name}: ${res.status}`,
-            );
+            throw new Error(`Failed to fetch data for node ${node.name}: ${res.status}`);
           }
 
           const data = await res.json();
-          
-          // エラーレスポンスの場合は例外を投げる
+
           if (data.error) {
             throw new Error(data.error);
           }
-          
+
           const formattedVersion =
-            data.clientVersion?.split("/").slice(0, 2).join("/") || "Unknown";
+            data.clientVersion?.split('/').slice(0, 2).join('/') || 'Unknown';
           const now = new Date();
           const lastChecked = new Intl.DateTimeFormat(locale, {
             dateStyle: 'short',
@@ -134,16 +127,15 @@ export default function NodeStatus() {
             blockHeight: 0,
             peers: 0,
             isServerRunning: false,
-            clientVersion: "Unknown",
+            clientVersion: 'Unknown',
           };
         }
       });
 
       await Promise.allSettled(fetchPromises);
 
-      // キャッシュに保存
-      localStorage.setItem("nodeStatus", JSON.stringify(updatedStatusData));
-      localStorage.setItem("nodeStatusTimestamp", Date.now().toString());
+      localStorage.setItem('nodeStatus', JSON.stringify(updatedStatusData));
+      localStorage.setItem('nodeStatusTimestamp', Date.now().toString());
 
       setStatusData(updatedStatusData);
       setLoading(false);
@@ -152,7 +144,6 @@ export default function NodeStatus() {
     fetchAllNodes();
   }, [nodes, locale, timeZone]);
 
-  // Healthチェック（Healthy, ホストネーム, 時刻）
   useEffect(() => {
     const fetchHealth = async () => {
       try {
@@ -160,7 +151,6 @@ export default function NodeStatus() {
         const data = await res.json();
         console.log('Health:', data.status);
         console.log('Hostname:', data.hostname);
-        // 日時をブラウザロケール・タイムゾーンで表示
         const healthTime = new Date(data.time);
         const formattedHealthTime = new Intl.DateTimeFormat(locale, {
           dateStyle: 'short',
@@ -180,8 +170,18 @@ export default function NodeStatus() {
       <div className="glass-card p-6 animate-fade-in">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+            <svg
+              className="w-4 h-4 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+              />
             </svg>
           </div>
           <h2 className="text-xl font-bold text-primary">Node Status</h2>
@@ -200,8 +200,18 @@ export default function NodeStatus() {
     <div className="glass-card p-6 animate-fade-in">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+          <svg
+            className="w-4 h-4 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+            />
           </svg>
         </div>
         <h2 className="text-xl font-bold text-primary">Node Status</h2>
@@ -246,16 +256,16 @@ export default function NodeStatus() {
                     )}
                   </td>
                   <td className="font-mono text-secondary">
-                    {statusData[node.id]?.blockHeight?.toLocaleString() ?? "—"}
+                    {statusData[node.id]?.blockHeight?.toLocaleString() ?? '—'}
                   </td>
                   <td className="font-mono text-secondary">
-                    {statusData[node.id]?.peers ?? "—"}
+                    {statusData[node.id]?.peers ?? '—'}
                   </td>
                   <td className="font-mono text-secondary whitespace-nowrap">
-                    {statusData[node.id]?.clientVersion ?? "—"}
+                    {statusData[node.id]?.clientVersion ?? '—'}
                   </td>
                   <td className="text-muted text-sm whitespace-nowrap">
-                    {statusData[node.id]?.lastChecked ?? "—"}
+                    {statusData[node.id]?.lastChecked ?? '—'}
                   </td>
                 </tr>
               ))
