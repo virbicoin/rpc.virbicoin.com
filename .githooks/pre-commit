@@ -2,6 +2,13 @@
 # Pre-commit hook: コミット前に CI と同じチェック (npm run check) を実行する。
 # 有効化: package.json の "prepare" スクリプトが core.hooksPath を .githooks に設定する。
 
+# A repo-local core.hooksPath overrides the user's global hooks, so chain
+# the global pre-commit first (e.g. the GPG passphrase cache warmer).
+global_hooks=$(git config --global core.hooksPath 2>/dev/null)
+if [ -n "$global_hooks" ] && [ -x "$global_hooks/pre-commit" ]; then
+  "$global_hooks/pre-commit" || exit 1
+fi
+
 echo "▶ pre-commit: 'npm run check' を実行中..."
 
 npm run check
